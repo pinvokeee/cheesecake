@@ -1,0 +1,8 @@
+.NodeCard {
+    width: 150px;
+    border: solid 2px grey;
+    /* border-radius: 2px; */
+    background: white;
+    overflow-wrap: anywhere;
+    padding: 10px;
+}

@@ -1,0 +1,23 @@
+.NewAppnedButton {
+    color: gray;
+    font-weight: bold;
+    border: solid 1px gray;
+    background-color: white;
+    border-radius: 50%;
+    margin: 0 auto;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 32px;
+    margin-top: 8px;
+    cursor: pointer;
+}
+
+.NewAppnedButton:hover {
+    background-color: lightgray;
+}
+
+.handle {
+    visibility: hidden;
+}
