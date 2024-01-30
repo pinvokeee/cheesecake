@@ -139,30 +139,30 @@ const flattenHiereachyNode = (
     reduceCallback?.call(parentNode);
 }
 
-const getHeightArray = (nodes: HierarchyNode[]) => {
+// const getHeightArray = (nodes: HierarchyNode[]) => {
 
-    let row = 0;
-    const heightArray : number[] = [];
+//     let row = 0;
+//     const heightArray : number[] = [];
 
-    flattenHiereachyNode(nodes, (n: HierarchyNode, parent) => {
+//     flattenHiereachyNode(nodes, (n: HierarchyNode, parent) => {
 
-        if (!parent) row = 0;
+//         if (!parent) row = 0;
 
-        const rect = getBBox(n.data, "NodeCard");
-        n.width = rect.width;
-        n.height = rect.height;
+//         const rect = getBBox(n.data, "NodeCard");
+//         n.width = rect.width;
+//         n.height = rect.height;
 
-        const height = heightArray[row];
+//         const height = heightArray[row];
 
-        heightArray[row] = height != undefined ? (height > n.height ? height : n.height) : n.height;
+//         heightArray[row] = height != undefined ? (height > n.height ? height : n.height) : n.height;
 
-        row++;
+//         row++;
 
-        return true;
-    });
+//         return true;
+//     });
 
-    return heightArray;
-}
+//     return heightArray;
+// }
 
 const getNodeFamilyWidth = (topNode: HierarchyNode) => {
 
@@ -235,25 +235,99 @@ const toMap = (targetNodes: HierarchyNode[]) => {
     return nodes;
 }
 
+/**
+ * 与えたノード配下の子ノードをすべて取得する
+ * @param topNode 
+ * @param nodes 
+ * @returns 
+ */
+const getChildNodes = (topNode: NodeInfo, nodes: Map<string, NodeInfo>, nest: number = 0, columnIndex: number = 0) => {
+
+    const childrenIds : { node: NodeInfo, column: number, columnIndex: number, nest: number }[] = [];
+
+    let column = 0;
+
+    console.log("--" + nest);
+    for (const id of topNode.childIdList) {
+
+        const node = nodes.get(id);
+
+        if (node) {
+            console.log(node);
+
+            childrenIds.push( { node, column, columnIndex, nest } );
+            childrenIds.push(...getChildNodes(node, nodes, nest + 1, columnIndex + 1));
+        }
+
+        column++;
+    }
+
+    return childrenIds;
+}
+
+/**
+ * 行ごとの高さを配列で取得する
+ * @param nodes 
+ * @returns 
+ */
+const getHeightArray = (nodes: Map<string, NodeInfo>) => {
+
+    //行の高さを保存する配列
+    const rowHeights: number[] = [];
+
+    //ネスト = 現在行
+    //再帰呼び出し用の関数
+    const f = (node: NodeInfo, nest: number) => {
+        
+        //保存している現在行の高さが新しい値のほうが高ければ代入、低ければ保持、値が存在しなければ新しい値を代入
+        rowHeights[nest] = rowHeights[nest] ? (node.height > rowHeights[nest] ? node.height : rowHeights[nest]) : node.height;
+
+        //子のIDの数だけループ
+        for (const id of node.childIdList) {
+            
+            //IDからノードの実態を取得
+            const n = nodes.get(id);
+
+            //ネストを深くして再帰
+            if (n) f(n, nest + 1);
+        }
+    }
+
+    const n = Array.from(nodes);
+    for (const [key, node] of n) {
+        f(node, 0);
+    }
+
+    return rowHeights;
+}
+
 const generateNodesAndEdges = (targetNodes: HierarchyNode[]) => {
 
     const nodes : Node[] = [];
     const edges : Edge[] = [];
 
     const map = toMap(targetNodes);
+    const topNodes = Array.from(map).filter(([key, node]) => node.parentId == "");
+    const heights : number[] = getHeightArray(map);
 
-    map.forEach((node, key) => {
+    const x = 0;
+    const y = 0;
 
-        if (node.parentId == "") {
+    for (const [id, node] of topNodes) {
+        
+        const children = getChildNodes(node, map, 0);   
+        const w = children.reduce((val, nodeSet) => val + nodeSet.node.width, 0);
+        const cx = w / 2 - node.width / 2;
 
+        nodes.push({
+            id,
+            type: "card",
+            position: { x: cx , y: 0 },
+            data: { label: node.text },
+        });
 
-
-        }
-
-
-    });
-
-    console.log(map);
+        console.log(children);
+    }
 
     return {
         nodes,
@@ -332,7 +406,7 @@ const agenerateNodesAndEdges = (hnodes: HierarchyNode[]) => {
 
     const paddingTop = 20;
     const marginTop = 48;
-    const heightArray = getHeightArray(hnodes);
+    const heightArray = [];
 
     let currentTreeWidth = 0;
     let currentRow = 0;
@@ -381,7 +455,7 @@ const agenerateNodesAndEdges = (hnodes: HierarchyNode[]) => {
 
         // cx += node.width ?? 0;
         cx += node.width ?? 0;
-        cy += heightArray[row];
+        // cy += heightArray[row];
 
         console.log(node);
 
