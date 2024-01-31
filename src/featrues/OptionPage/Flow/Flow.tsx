@@ -14,6 +14,7 @@ type NodeInfo = {
     height: number,
     childIdList: string[],
     familyWidth?: number,
+    nest: number,
 }
 
 const nodeTypes = {
@@ -22,7 +23,6 @@ const nodeTypes = {
 }
 
 const textBoxId = `test_${crypto.randomUUID()}`;
-const flowCardTextCss = "flowCardText";
 
 const getBBox = (text: string, css: string) => {
 
@@ -57,29 +57,29 @@ export const Flow = (props: { nodes: HierarchyNode[], onAppendNodeClick?: (id: s
 }
 
 
-const createNodeInfo = (arr: HierarchyNode[], parentNode?: HierarchyNode) => {
+// const createNodeInfo = (arr: HierarchyNode[], parentNode?: HierarchyNode) => {
 
-    const result: Map<string, NodeInfo> = new Map();
+//     const result: Map<string, NodeInfo> = new Map();
 
-    arr.forEach(node => {
+//     arr.forEach(node => {
 
-        const rect = getBBox(node.data, flowCardTextCss);
+//         const rect = getBBox(node.data, flowCardTextCss);
 
-        result.set(node.id, 
-            {
-                text: node.data,
-                id: node.id,
-                parentId: parentNode?.id ?? "",
-                width: rect.width,
-                height: rect.height,
-                childIdList: [],
-            });
+//         result.set(node.id, 
+//             {
+//                 text: node.data,
+//                 id: node.id,
+//                 parentId: parentNode?.id ?? "",
+//                 width: rect.width,
+//                 height: rect.height,
+//                 childIdList: [],
+//             });
 
-        if (node.children) createNodeInfo(node.children, node).forEach(n => result.set(n.id, n));
-    });
+//         if (node.children) createNodeInfo(node.children, node).forEach(n => result.set(n.id, n));
+//     });
 
-    return result;
-}
+//     return result;
+// }
 
 const FlowInner = (props: { nodes: HierarchyNode[], onAppendNodeClick?: (id: string) => void }) => {
 
@@ -124,26 +124,13 @@ const FlowInner = (props: { nodes: HierarchyNode[], onAppendNodeClick?: (id: str
     )
 }
 
-const flattenHiereachyNode = (
-    nodes: HierarchyNode[], 
-    callback: (node: HierarchyNode, parentNode?: HierarchyNode) => boolean, 
-    reduceCallback?: (parentNode?: HierarchyNode) => void,
-    parentNode?: HierarchyNode,) => {
-
-    for (const n of nodes) {
-        const isNext = callback(n, parentNode);
-        if (isNext) flattenHiereachyNode(n.children, callback, reduceCallback, n);
-        if (!isNext) break;
-    }
-
-    reduceCallback?.call(parentNode);
-}
-
 const toMap = (targetNodes: HierarchyNode[]) => {
 
     const nodes : Map<string, NodeInfo> = new Map();
 
-    flattenHiereachyNode(targetNodes, (node, parentNode) => {
+    //ネスト = 現在行
+    //再帰呼び出し用の関数
+    const f = (node: HierarchyNode, nest: number, parentNode: HierarchyNode | undefined = undefined) => {
 
         const { width, height } = getBBox(node.data, "NodeCard");
 
@@ -151,41 +138,50 @@ const toMap = (targetNodes: HierarchyNode[]) => {
             id: node.id, 
             parentId: parentNode?.id ?? "",
             text: node.data,
-            childIdList: [],
+            childIdList: node.children.map(node => node.id),
             width,
             height,
+            nest,
         })
 
-        nodes.get(parentNode?.id ?? "")?.childIdList.push(node.id);
+        for (const child of node.children) {
+            f(child, nest + 1, node);
+        }
+    };
 
-        return true;
-    })
+    let nest = 0; 
+
+    for (const n of targetNodes) {
+        f(n, nest);
+    }
 
     return nodes;
 }
 
+const getChildNodesFromTopNode = (topNode: NodeInfo, nodes: Map<string, NodeInfo>) => {
+    return getChildNodes(topNode.childIdList, nodes);
+}
+
 /**
- * 与えたノード配下の子ノードをすべて取得する
+ * 与えたノード配列の子ノードをすべて取得する
  * @param topNode 
  * @param nodes 
  * @returns 
  */
-const getChildNodes = (topNode: NodeInfo, nodes: Map<string, NodeInfo>, nest: number = 0, columnIndex: number = 0) => {
+const getChildNodes = (nodeIds: string[], nodes: Map<string, NodeInfo>, nest: number = 0, columnIndex: number = 0) => {
 
     const childrenIds : { node: NodeInfo, column: number, columnIndex: number, nest: number }[] = [];
 
     let column = 0;
 
-    console.log("--" + nest);
-    for (const id of topNode.childIdList) {
+    for (const id of nodeIds) {
 
         const node = nodes.get(id);
 
         if (node) {
-            console.log(node);
 
             childrenIds.push( { node, column, columnIndex, nest } );
-            childrenIds.push(...getChildNodes(node, nodes, nest + 1, columnIndex + 1));
+            childrenIds.push(...getChildNodes(node.childIdList, nodes, nest + 1, columnIndex + 1));
         }
 
         column++;
@@ -230,6 +226,7 @@ const getHeightArray = (nodes: Map<string, NodeInfo>) => {
     return rowHeights;
 }
 
+
 const generateNodesAndEdges = (targetNodes: HierarchyNode[]) => {
 
     const nodes : Node[] = [];
@@ -242,21 +239,54 @@ const generateNodesAndEdges = (targetNodes: HierarchyNode[]) => {
     const x = 0;
     const y = 0;
 
-    for (const [id, node] of topNodes) {
-        
-        const children = getChildNodes(node, map, 0);   
-        const w = children.reduce((val, nodeSet) => val + nodeSet.node.width, 0);
-        const cx = w / 2 - node.width / 2;
+    console.log(heights);
 
-        nodes.push({
-            id,
-            type: "card",
-            position: { x: cx , y: 0 },
-            data: { label: node.text },
-        });
+    const a = (targetIds: string[], baseX: number = 0) => {
 
-        console.log(children);
+        let x = baseX;
+
+        for (const id of targetIds) {
+
+            const node = map.get(id);
+
+            if (node) {
+
+                const children = getChildNodesFromTopNode(node, map);
+                console.log(targetIds);
+                const w = children.reduce((val, nodeSet) => val + nodeSet.node.width, 0);
+                
+                const cx = x + (w / 2 - node.width / 2);
+                const cy = heights.slice(0, node.nest).reduce((sum, val) => sum + val, 0)
+
+                nodes.push({
+                    id,
+                    type: "card",
+                    position: { x: cx , y: cy },
+                    data: { label: x },
+                });
+
+                a(node.childIdList, x);
+
+                x += node.width + w;
+            }
+        }    
     }
+
+    a(topNodes.map(([id, node]) => id));
+
+    //     const children = getChildNodes(node, map, 0);   
+    //     const w = children.reduce((val, nodeSet) => val + nodeSet.node.width, 0);
+    //     const cx = w / 2 - node.width / 2;
+
+    //     nodes.push({
+    //         id,
+    //         type: "card",
+    //         position: { x: cx , y: 0 },
+    //         data: { label: node.text },
+    //     });
+
+    //     console.log(children);
+    // }
 
     return {
         nodes,
