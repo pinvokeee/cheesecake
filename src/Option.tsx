@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import OptionPage from './OptionPage'
+import OptionPage from './featrues/OptionPage/pages/OptionPage'
 
 ReactDOM.render(
   <React.StrictMode>

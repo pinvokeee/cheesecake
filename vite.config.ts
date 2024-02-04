@@ -7,7 +7,15 @@ const manifest = defineManifest({
     name: "cheesecake",
     version: "1.0.0",
     options_page: "option.html",
-    permissions: [],
+    permissions: [
+        "storage",
+        "sidePanel",
+    ],
+
+    side_panel: {
+        "default_path": "option.html"
+      },
+    
     action: {
       default_popup: "index.html",
     },

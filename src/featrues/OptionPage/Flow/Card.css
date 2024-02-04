@@ -1,7 +1,7 @@
 .NodeCard {
     width: 150px;
-    border: solid 2px grey;
-    /* border-radius: 2px; */
+    border: solid 1px grey;
+    border-radius: 1px;
     background: white;
     overflow-wrap: anywhere;
     padding: 10px;
