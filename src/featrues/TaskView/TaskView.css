@@ -1,6 +1,10 @@
 .container {
-    padding: 40px;
-    width: 400px;
+    padding: 20px;
+    width: 700px;
+    height: 500px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     /* height: 400px; */
+    max-height: 500px;
 }
 

@@ -54,9 +54,7 @@ export const TaskView = (props: Props) => {
         <Box className={"container"}>
             <Stack gap={2}>
 
-                <Measurement currentTask={currentTask} currentMeasuredTask={currentMeasuredTask} />
 
-                <Divider></Divider>
                 <Breadcrumbs aria-label="breadcrumb" sx={{ fontSize: "10pt" }}>
                     {<Link href="#" color="inherit" onClick={(e) => setSelectedNode(undefined)}>{"タスク一覧"}</Link>   }
                     {breadCrumbs.map((node, index) => 
@@ -64,17 +62,27 @@ export const TaskView = (props: Props) => {
                             ? <Link href="#" color="inherit" key={node.id} onClick={(e) => onClickBreadCrumb(node)}>{node.text}</Link> 
                             : <Typography fontSize={"inherit"} color="text.primary" key={node.id}>{node.text}</Typography>)}
                 </Breadcrumbs>
-                
+
                 { (selecter.map(node => 
                     hasChild(node) ? 
+                    <Button variant="text" sx={{justifyContent: "left"}} key={node.id} onClick={(e) => onClickNode(node)}>{ node.text }</Button> : 
+                    <Button variant="text" sx={{justifyContent: "left"}} key={node.id} onClick={(e) => onClickNode(node)}>{ node.text }</Button>)) }
+
+                {/* { (selecter.map(node => 
+                    hasChild(node) ? 
                     <Button variant="contained" key={node.id} onClick={(e) => onClickNode(node)}>{ node.text }</Button> : 
-                    <Button color="success" variant="contained" key={node.id} onClick={(e) => onClickNode(node)}>{ node.text }</Button>)) }
+                    <Button color="success" variant="contained" key={node.id} onClick={(e) => onClickNode(node)}>{ node.text }</Button>)) } */}
+            </Stack>
+
+            <Stack sx={{overflow: "auto"}}>
+                <Measurement currentTask={currentTask} currentMeasuredTask={currentMeasuredTask} />
 
                 <Divider></Divider>
-                
+                            
                 <TaskList taskMap={taskMap} states={states}></TaskList>
 
             </Stack>
+
 
         </Box>
 
