@@ -1,4 +1,4 @@
-import { TaskNode } from "./TaskNode"
+import { TaskItem } from "./TaskItem"
 
 export type AppCommonConfig = {
 
@@ -10,7 +10,7 @@ export type AppCommonConfig = {
         apiKey: string,
     }
 
-    taskItems: TaskNode[],
+    taskItems: TaskItem[],
 }
 
 export type AppUserConfig = {

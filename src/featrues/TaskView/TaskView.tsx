@@ -1,10 +1,11 @@
-import { Box, Breadcrumbs, Button, CircularProgress, Divider, Link, Stack, Typography } from "@mui/material"
+import { Alert, Box, Breadcrumbs, Button, CircularProgress, Divider, Link, Snackbar, Stack, Typography } from "@mui/material"
 import { useTask } from "./hooks/useTask";
 import "./TaskView.css";
 import { useState } from "react";
-import { TaskNode } from "../../common/types/TaskNode";
+import { TaskItem } from "../../common/types/TaskItem";
 import { Measurement } from "./Measurement";
-import { TaskList } from "./TaskList";
+import { Message } from "./Message";
+import { TaskQue } from "./TaskQue";
 
 type Props = {
     
@@ -18,43 +19,49 @@ export const TaskView = (props: Props) => {
             getParentsArray, 
             hasChild, 
             handleTask, 
-            getCurrentMeasurementTask, 
-            getCurrentTask,
+            // getCurrentMeasurementTask, 
+            // getCurrentTask,
             getTaskStates,
 
     } = useTask();
 
-    const [selectedNode, setSelectedNode] = useState<TaskNode>();
-    const currentTask = getCurrentTask();
-    const currentMeasuredTask = getCurrentMeasurementTask();
+    const [selectedNode, setSelectedNode] = useState<TaskItem>();
+    // const currentTask = getCurrentTask();
+    // const currentMeasuredTask = getCurrentMeasurementTask();
     const states = getTaskStates();
 
     const selecter = getSelecter(selectedNode);
     const breadCrumbs = getParentsArray(selectedNode);
 
-    console.log(currentTask, currentMeasuredTask);
-
+    const [startMessage, setStartMessage] = useState({
+        isOpen: false,
+        text: "",
+    });
+ 
     if (!selecter) return <Box className={"container"}><CircularProgress /></Box>
 
-    const onClickNode = (node: TaskNode) => {
-        console.log(hasChild(node));
-        if (hasChild(node)) {
-            setSelectedNode(node);
-        }
+    const onClickNode = (node: TaskItem) => {
+        if (hasChild(node)) setSelectedNode(node);
         else {
             handleTask(node);
+            setStartMessage({
+                isOpen: true,
+                text: `タスク ${node.text}を開始しました`,
+            });
         }
     }
 
-    const onClickBreadCrumb = (node: TaskNode) => {
+    const onClickBreadCrumb = (node: TaskItem) => {
         setSelectedNode(node);
     }
 
     return <>
         <Box className={"container"}>
+
+            <Message {...startMessage} onClose={() => setStartMessage((_) => ({ isOpen: false, text: _.text }))}></Message>
+
             <Stack gap={2}>
-
-
+                
                 <Breadcrumbs aria-label="breadcrumb" sx={{ fontSize: "10pt" }}>
                     {<Link href="#" color="inherit" onClick={(e) => setSelectedNode(undefined)}>{"タスク一覧"}</Link>   }
                     {breadCrumbs.map((node, index) => 
@@ -74,14 +81,14 @@ export const TaskView = (props: Props) => {
                     <Button color="success" variant="contained" key={node.id} onClick={(e) => onClickNode(node)}>{ node.text }</Button>)) } */}
             </Stack>
 
-            <Stack sx={{overflow: "auto"}}>
-                <Measurement currentTask={currentTask} currentMeasuredTask={currentMeasuredTask} />
+            {/* <Stack sx={{overflow: "auto"}}> */}
+                {/* <Measurement currentTask={currentTask} currentMeasuredTask={currentMeasuredTask} /> */}
 
-                <Divider></Divider>
+                {/* <Divider></Divider> */}
                             
-                <TaskList taskMap={taskMap} states={states}></TaskList>
+                <TaskQue taskMap={taskMap} states={states}></TaskQue>
 
-            </Stack>
+            {/* </Stack> */}
 
 
         </Box>

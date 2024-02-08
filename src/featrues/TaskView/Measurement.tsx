@@ -1,10 +1,10 @@
 import { Button, Divider, Stack, Typography } from "@mui/material"
-import { TaskNode } from "../../common/types/TaskNode"
-import { MeasurementTask } from "../../common/types/MeasurementTask"
+import { TaskItem } from "../../common/types/TaskItem"
+import { TaskQueObject } from "../../common/types/MeasurementTask"
 
 type Props = {
-    currentTask: TaskNode | undefined,
-    currentMeasuredTask: MeasurementTask | undefined,
+    currentTask: TaskItem | undefined,
+    currentMeasuredTask: TaskQueObject | undefined,
 }
 
 export const Measurement = (props: Props) => {

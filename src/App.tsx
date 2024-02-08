@@ -4,10 +4,10 @@ import './App.css'
 import { TaskView } from './featrues/TaskView/TaskView'
 import { HierarchyNode } from './common/types/hierarchyNode'
 import { AppCommonConfig } from './common/types/appConfig'
-import { keys } from './featrues/keys'
-import { TaskNode } from './common/types/TaskNode'
+import { keys } from './common/keys'
+import { TaskItem } from './common/types/TaskItem'
 
-const data : TaskNode[] = [
+const data : TaskItem[] = [
     {
         "id": "c9d0e1f2-g3h4-i5j6-k7l8m9n0o1",
         "parentId": "",

@@ -6,7 +6,7 @@ import { NodeNewButton } from "./NodeNewButton";
 import { Card, cardRect } from './Card';
 import './Card.css';
 import { HierarchyNode } from '../../../common/types/hierarchyNode';
-import { TaskNode } from '../../../common/types/TaskNode';
+import { TaskItem } from '../../../common/types/TaskItem';
 
 // const data : TaskNode[] = [ 
 //     {
@@ -171,7 +171,7 @@ import { TaskNode } from '../../../common/types/TaskNode';
 //     }
 // ]
 
-const data : TaskNode[] = [
+const data : TaskItem[] = [
     {
         "id": "a1b2c3d4-e5f6-g7h8-i9j0k1l2m3n4",
         "parentId": "",
@@ -350,7 +350,7 @@ const FlowInner = (props: { nodes: HierarchyNode[], onAppendNodeClick?: (id: str
 
 // const toMap = (targetNodes: HierarchyNode[]) => {
 
-const toMap = (sourceNodes: TaskNode[]) => {
+const toMap = (sourceNodes: TaskItem[]) => {
     
     const nodeInfo : [string, NodeInfo][] = sourceNodes.map(node => {
 

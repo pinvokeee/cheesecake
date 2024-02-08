@@ -1,18 +1,18 @@
-import { MeasurementTask } from "../../common/types/MeasurementTask";
-import { TaskNode } from "../../common/types/TaskNode";
+import { TaskQueObject } from "../../common/types/MeasurementTask";
+import { TaskItem } from "../../common/types/TaskItem";
 import { AppCommonConfig } from "../../common/types/appConfig";
-import { keys } from "../keys";
+import { keys } from "../../common/keys";
 
-export class TaskDataProvider {
+export class TaskDataController {
 
     constructor () {
 
     }
 
-    startTask(task: TaskNode, taskLog: MeasurementTask[]) {
+    startTask(task: TaskItem, taskLog: TaskQueObject[]) {
         console.log(task, taskLog);
 
-        const t: MeasurementTask = {
+        const t: TaskQueObject = {
             taskId: task.id,
             start: new Date().getTime(),
             end: undefined,
@@ -25,7 +25,7 @@ export class TaskDataProvider {
         return t;
     }
 
-    endTask(task: TaskNode, taskLog: MeasurementTask[]) {
+    endTask(task: TaskItem, taskLog: TaskQueObject[]) {
 
         const currentTask = taskLog.findLast(t => task.id == t.taskId);
 
@@ -38,7 +38,7 @@ export class TaskDataProvider {
         return currentTask;
     }
 
-    pauseTask(task: TaskNode, taskLog: MeasurementTask[]) {
+    pauseTask(task: TaskItem, taskLog: TaskQueObject[]) {
 
         const currentTask = taskLog.findLast(t => task.id == t.taskId);
 
@@ -51,7 +51,7 @@ export class TaskDataProvider {
         return currentTask;
     }
     
-    restartTask(task: TaskNode, taskLog: MeasurementTask[]) {
+    restartTask(task: TaskItem, taskLog: TaskQueObject[]) {
 
         const currentTask = taskLog.findLast(t => task.id == t.taskId);
 
@@ -64,8 +64,28 @@ export class TaskDataProvider {
         return currentTask;
     }
 
+    shouldConfrimStartTask(task: TaskItem, taskLog: TaskQueObject[], taskItems: TaskItem[]) {
+
+        const t = this.getCurrentTask(taskLog);
+        const current = t ? { ...t } : t;
+
+        //現在のタスクが一時停止中
+        if (current && current.state == "pause") {
+
+            //一時停止中のタスクIDと指定したタスクIDが一致したら再開
+            if (current.taskId == task.id) {
+                const t = this.restartTask(task, taskLog);
+                console.log(task, taskLog);
+            }
+            else { //そうでなければ別で開始
+                const t = this.startTask(task, taskLog);
+            }
+        }
+
+    }
+
     //タスク終了以外の処理
-    handleTask(task: TaskNode, taskLog: MeasurementTask[], taskItems: TaskNode[]) {
+    handleTask(task: TaskItem, taskLog: TaskQueObject[], taskItems: TaskItem[]) {
 
         // const current = this.getTask(task, taskLog);
         const t = this.getCurrentTask(taskLog);
@@ -98,7 +118,7 @@ export class TaskDataProvider {
                 const t = this.pauseTask(task, taskLog);
             }
             else { //そうでなければ現在のタスクを一時停止後、別で開始
-                const ts = taskItems.find(tt => tt.id == current.taskId) as TaskNode;
+                const ts = taskItems.find(tt => tt.id == current.taskId) as TaskItem;
                 this.pauseTask(ts, taskLog);
                 const t = this.startTask(task, taskLog);
             }
@@ -110,20 +130,20 @@ export class TaskDataProvider {
         return taskLog;
     }
 
-    getTask(task: TaskNode, taskLog: MeasurementTask[]) {
+    getTask(task: TaskItem, taskLog: TaskQueObject[]) {
         if (taskLog.length == 0) return undefined;
         const current = taskLog.findLast(t => t.taskId == task.id);
         return current;
     }
 
-    getCurrentTask(taskLog: MeasurementTask[]) {
+    getCurrentTask(taskLog: TaskQueObject[]) {
         if (taskLog.length == 0) return undefined;
         const current = taskLog.toReversed()[0];
         return current;
     }
 
     getTaskItems() {
-        return new Promise<TaskNode[]>((resolve, reject) => {
+        return new Promise<TaskItem[]>((resolve, reject) => {
             
             chrome.storage.local.get(keys.commonConfig, (value: any) => {
                 const a: AppCommonConfig =  { ...value[keys.commonConfig] };
@@ -134,15 +154,15 @@ export class TaskDataProvider {
 
     loadTaskLog() {
 
-        return new Promise<MeasurementTask[]>((resolve, reject) => {
-            chrome.storage.local.get(keys.logData, (value: any) => {
-                const a: MeasurementTask[] =  JSON.parse(value[keys.logData]);
+        return new Promise<TaskQueObject[]>((resolve, reject) => {
+            chrome.storage.local.get(keys.taskQue, (value: any) => {
+                const a: TaskQueObject[] =  JSON.parse(value[keys.taskQue]);
                 resolve(a);
             });
         });
     }
 
-    saveTaskLog(taskLog: MeasurementTask[]) {
-        chrome.storage.local.set({ [keys.logData]: JSON.stringify(taskLog) });
+    saveTaskLog(taskLog: TaskQueObject[]) {
+        chrome.storage.local.set({ [keys.taskQue]: JSON.stringify(taskLog) });
     }
 }

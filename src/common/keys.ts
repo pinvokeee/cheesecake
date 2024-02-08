@@ -1,4 +1,5 @@
 export const keys = {
     commonConfig: "AppCommonConfig",
-    logData: "Log",
+    taskQue: "taskQue",
+    eventLog: "eventLog",
 }

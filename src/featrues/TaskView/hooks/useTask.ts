@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react"
-import { keys } from "../../keys";
+import { keys } from "../../../common/keys";
 import { AppCommonConfig } from "../../../common/types/appConfig";
-import { TaskDataProvider } from "../../Provider/TaskDataProvider";
-import { TaskNode } from "../../../common/types/TaskNode";
-import { MeasurementTask } from "../../../common/types/MeasurementTask";
+import { TaskDataController } from "../../Provider/TaskDataController";
+import { TaskItem } from "../../../common/types/TaskItem";
+import { TaskQueObject } from "../../../common/types/MeasurementTask";
 
-const getParent = (targetNode: TaskNode, taskMap: Map<string, TaskNode>) => {
+const getParent = (targetNode: TaskItem, taskMap: Map<string, TaskItem>) => {
 
     const child = [];
     let currentId: string | undefined = targetNode.id;
@@ -20,12 +20,11 @@ const getParent = (targetNode: TaskNode, taskMap: Map<string, TaskNode>) => {
 
 export const useTask = () => {
 
-    const provider = new TaskDataProvider();
+    const provider = new TaskDataController();
     
-    const [taskNodes, setTaskNodes] = useState<TaskNode[]>([]);
-    const [taskLog, setTaskLog] = useState<MeasurementTask[]>([]);
+    const [taskNodes, setTaskNodes] = useState<TaskItem[]>([]);
+    const [taskLog, setTaskLog] = useState<TaskQueObject[]>([]);
     const taskMap = new Map(taskNodes?.map(task => [task.id, task]));
-    const currentMeasuredTask = provider.getCurrentTask(taskLog);
 
     useEffect(() => {        
         
@@ -34,40 +33,40 @@ export const useTask = () => {
 
     }, []);
 
-    const getSelecter = (parentTaskNode?: TaskNode) => {
+    const getSelecter = (parentTaskNode?: TaskItem) => {
         if (!parentTaskNode) return taskNodes?.filter(node => node.parentId == "") ?? [];
         return taskNodes?.filter(node => node.parentId == parentTaskNode.id) ?? [];        
     }
 
-    const hasChild = (taskNode: TaskNode) => {
+    const hasChild = (taskNode: TaskItem) => {
         return taskNodes?.find(n => n.parentId == taskNode.id) != undefined;
     }
 
-    const getParentsArray = (target: TaskNode | undefined) => {
+    const getParentsArray = (target: TaskItem | undefined) => {
         if (!target) return [];
-        return getParent(target, taskMap).map(id => taskMap.get(id) as TaskNode).reverse();
+        return getParent(target, taskMap).map(id => taskMap.get(id) as TaskItem).reverse();
     }
 
-    const handleTask = (target: TaskNode) => {
-        const task = provider.getTask(target, taskLog);
-        const newLog = provider.handleTask(target, taskLog, taskNodes);
-        setTaskLog([...newLog]);
+    const handleTask = (target: TaskItem) => {
+        // const task = provider.getTask(target, taskLog);
+        // const newLog = provider.handleTask(target, taskLog, taskNodes);
+        // setTaskLog([...newLog]);
 
-        console.log(newLog);
+        // console.log(newLog);
 
         // console.log(provider.getTaskLog());
     }
 
     const getCurrentTask = () => {
 
-        const mtask = provider.getCurrentTask(taskLog);
-        if (!mtask) return mtask;
+        // const mtask = provider.getCurrentTask(taskLog);
+        // if (!mtask) return mtask;
 
-        return taskMap.get(mtask.taskId) as TaskNode;
+        // return taskMap.get(mtask.taskId) as TaskItem;
     }
 
     const getCurrentMeasurementTask = () => {
-        return currentMeasuredTask;
+        // return currentMeasuredTask;
     }
 
     const getTaskStates = () => {

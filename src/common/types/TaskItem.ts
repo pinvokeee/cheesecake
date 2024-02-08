@@ -1,4 +1,4 @@
-export type TaskNode = {
+export type TaskItem = {
     id: string,
     parentId: string,
     text: string,
