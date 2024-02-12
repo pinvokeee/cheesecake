@@ -1,5 +1,5 @@
 import { Box, Button, Card, CardActions, CardContent, Chip, ChipPropsColorOverrides, Container, Dialog, DialogActions, DialogContent, DialogContentText, Divider, Menu, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import { TaskQueueObject } from "../../common/types/TaskQueObject"
+import { TaskQueueObject, TaskState } from "../../common/types/TaskQueObject"
 import { TaskCategoryDicitonary, TaskCategoryObject } from "../../common/types/TaskCategory"
 import { OverridableStringUnion } from '@mui/types';
 import "./TaskQueue.css";
@@ -13,7 +13,7 @@ type Props = {
         taskCategory: TaskCategoryObject | undefined;
         queId: string;
         taskId: string;
-        state: "stop" | "start" | "pause";
+        state: TaskState;
         startTime: number | undefined;
         endTime: number | undefined;
         countSeconds: number;
@@ -59,7 +59,7 @@ export const TaskQueue = (props: Props) => {
         setAnchor(e.currentTarget);
     }
 
-    const stateLabels = { "start": "進行中", "pause": "保留", "stop": "終了" };
+    const stateLabels: { [key in TaskState]: string} = { start: "進行中", pause: "保留", stop: "終了", cancel: "キャンセル" };
     const stateColors: { [key: string]:     
             OverridableStringUnion<'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning', 
             ChipPropsColorOverrides>
