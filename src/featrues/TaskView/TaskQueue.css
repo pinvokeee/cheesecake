@@ -5,3 +5,7 @@
     border: solid 1px #d9dada;
     overflow-y: auto;
 }
+
+.tbContainer .stateCell {
+    width: 80px;
+}

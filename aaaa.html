@@ -1,0 +1,51 @@
+
+<body>
+<script>
+
+	window.crossOriginIsolated = true;
+
+	const aaa = [
+		["keya", "atesta"],
+		["keyb", "atesta"],
+		["keyc", "atesta"],
+		["keyd", "atesta"],
+		["keye", "atesta"],
+		["keyf", "atesta"],
+		["keyg", "atesta"],
+		["keyh", "atesta"],
+		["keyi", "atesta"],
+		["keyj", "atesta"],
+		["keyk", "atesta"],
+		["keyl", "atesta"],
+		["keyn", "atesta"],
+		["keym", "atesta"],
+		["keyo", "atesta"],
+		["keyp", "atesta"],
+		["keyq", "atesta"],
+		["keyr", "atesta"],
+		["keys", "atesta"],
+		["keyt", "atesta"],
+		["keyu", "atesta"],
+		["keyv", "atesta"],
+		["keyx", "atesta"]
+	];
+
+	const aaaa = () => {
+
+		console.time();
+	
+
+		for (let i = 0; i < 1000; i++) {
+			const a = new Map(aaa);		
+		}
+
+
+		console.timeEnd();
+
+		console.log(performance.memory);
+
+	}
+
+</script>
+<button onclick="aaaa();">test</button>
+</body>

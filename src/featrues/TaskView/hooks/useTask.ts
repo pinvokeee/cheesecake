@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
 import { keys } from "../../../common/keys";
 import { AppCommonConfig } from "../../../common/types/appConfig";
-import { TaskDataController } from "../../Provider/TaskDataController";
-import { TaskItem } from "../../../common/types/TaskItem";
-import { TaskQueObject } from "../../../common/types/MeasurementTask";
+import { TaskQueueController } from "../../Provider/TaskQueueController";
+import { TaskCategoryObject } from "../../../common/types/TaskCategory";
+import { TaskQueueObject } from "../../../common/types/TaskQueObject";
+import { TaskQueueDicitonary } from "../../../common/types/TaskQueueDicitonary";
 
-const getParent = (targetNode: TaskItem, taskMap: Map<string, TaskItem>) => {
+const getParent = (targetNode: TaskCategoryObject, taskMap: Map<string, TaskCategoryObject>) => {
 
     const child = [];
     let currentId: string | undefined = targetNode.id;
@@ -18,36 +19,60 @@ const getParent = (targetNode: TaskItem, taskMap: Map<string, TaskItem>) => {
     return child;
 }
 
-export const useTask = () => {
+type Props = {
+    onChangedTask: (target: TaskQueueObject) => void, 
+}
 
-    const provider = new TaskDataController();
-    
-    const [taskNodes, setTaskNodes] = useState<TaskItem[]>([]);
-    const [taskLog, setTaskLog] = useState<TaskQueObject[]>([]);
-    const taskMap = new Map(taskNodes?.map(task => [task.id, task]));
+export const useTask = (props: Props) => {
 
-    useEffect(() => {        
+    const [taskCategories, setTaskCategories] = useState<TaskCategoryObject[]>([]);
+    const [taskQueue, setTaskQueue] = useState<TaskQueueDicitonary>(new TaskQueueDicitonary());
+
+    const onChangeTask = (target: TaskQueueObject) => {
+        props.onChangedTask?.call(this, target);
+    }
+
+    const controller = new TaskQueueController(onChangeTask); 
+    const taskCategoryDic = new Map(taskCategories?.map(task => [task.id, task]));
+
+    useEffect(() => {
         
-        provider.getTaskItems().then(nodes => setTaskNodes(nodes));
-        provider.loadTaskLog().then(log => setTaskLog(log));
+        controller.getTaskCategoryItems().then(nodes => setTaskCategories(nodes));
+        controller.loadTaskQueue().then(log => setTaskQueue(log));
 
     }, []);
 
-    const getSelecter = (parentTaskNode?: TaskItem) => {
-        if (!parentTaskNode) return taskNodes?.filter(node => node.parentId == "") ?? [];
-        return taskNodes?.filter(node => node.parentId == parentTaskNode.id) ?? [];        
+    const getSelecter = (parentTaskNode?: TaskCategoryObject) => {
+        if (!parentTaskNode) return taskCategories?.filter(node => node.parentId == "") ?? [];
+        return taskCategories?.filter(node => node.parentId == parentTaskNode.id) ?? [];        
     }
 
-    const hasChild = (taskNode: TaskItem) => {
-        return taskNodes?.find(n => n.parentId == taskNode.id) != undefined;
+    const hasChild = (taskNode: TaskCategoryObject) => {
+        return taskCategories?.find(n => n.parentId == taskNode.id) != undefined;
     }
 
-    const getParentsArray = (target: TaskItem | undefined) => {
+    const getParentsArray = (target: TaskCategoryObject | undefined) => {
         if (!target) return [];
-        return getParent(target, taskMap).map(id => taskMap.get(id) as TaskItem).reverse();
+        return getParent(target, taskCategoryDic).map(id => taskCategoryDic.get(id) as TaskCategoryObject).reverse();
     }
 
-    const handleTask = (target: TaskItem) => {
+    const handleStartTask = (target: TaskCategoryObject) => {
+        setTaskQueue(controller.handleTask(undefined, target.id, taskQueue, taskCategories));
+    }
+
+    const handleStopTask = (target: TaskQueueObject) => {
+        setTaskQueue(controller.handleStopTask(target.queId, taskQueue));
+    }
+
+    const handleCancelTask = (targetQueId: string) => {
+        setTaskQueue(controller.handleStopTask(targetQueId, taskQueue));
+    }
+
+    const getTaskStates = () => {
+        return Array.from(taskQueue.values()).filter(t => t.state != "stop").map(t => ({ ...t, taskCategory: taskCategoryDic.get(t.taskId)}));
+   }
+
+    const handleTask = (target: TaskCategoryObject) => {
         // const task = provider.getTask(target, taskLog);
         // const newLog = provider.handleTask(target, taskLog, taskNodes);
         // setTaskLog([...newLog]);
@@ -69,18 +94,27 @@ export const useTask = () => {
         // return currentMeasuredTask;
     }
 
-    const getTaskStates = () => {
-        return taskLog;
+    const getTaskCategories = () => {
+        return taskCategories;
+    }
+
+    const getTaskQueue = () => {
+        return taskQueue;
     }
 
     return {
-        taskMap,
+        taskCategoryDic,
         getSelecter,
         getParentsArray,
         hasChild,
+        handleStartTask,
+        handleStopTask,
+        handleCancelTask,
         handleTask,
         getCurrentTask,
         getCurrentMeasurementTask,
+        getTaskQueue,
+        getTaskCategories,
         getTaskStates,
     }
 }

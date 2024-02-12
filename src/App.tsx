@@ -5,9 +5,9 @@ import { TaskView } from './featrues/TaskView/TaskView'
 import { HierarchyNode } from './common/types/hierarchyNode'
 import { AppCommonConfig } from './common/types/appConfig'
 import { keys } from './common/keys'
-import { TaskItem } from './common/types/TaskItem'
+import { TaskCategoryObject } from './common/types/TaskCategory'
 
-const data : TaskItem[] = [
+const data : TaskCategoryObject[] = [
     {
         "id": "c9d0e1f2-g3h4-i5j6-k7l8m9n0o1",
         "parentId": "",

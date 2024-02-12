@@ -1,11 +1,12 @@
-import { Alert, Box, Breadcrumbs, Button, CircularProgress, Divider, Link, Snackbar, Stack, Typography } from "@mui/material"
+import { Alert, AlertColor, Box, Breadcrumbs, Button, CircularProgress, Divider, Link, Snackbar, Stack, Typography } from "@mui/material"
 import { useTask } from "./hooks/useTask";
 import "./TaskView.css";
-import { useState } from "react";
-import { TaskItem } from "../../common/types/TaskItem";
+import { useCallback, useState } from "react";
+import { TaskCategoryObject } from "../../common/types/TaskCategory";
 import { Measurement } from "./Measurement";
 import { Message } from "./Message";
-import { TaskQue } from "./TaskQue";
+import { TaskQueue } from "./TaskQueue";
+import { TaskQueueObject } from "../../common/types/TaskQueObject";
 
 type Props = {
     
@@ -13,52 +14,89 @@ type Props = {
 
 export const TaskView = (props: Props) => {
 
+    const onChangedTask = (target: TaskQueueObject) => {
+
+        if (target.state == "start") {
+            const task = categories.find(t => t.id == target.taskId);
+            if (task) setMessages(st => [...st, [crypto.randomUUID(), `${task?.text}を開始しました`, "success"]]);
+        }
+
+        if (target.state == "stop") {
+            const task = categories.find(t => t.id == target.taskId);
+            if (task) setMessages(st => [...st, [crypto.randomUUID(), `${task?.text}を終了しました`, "info"]]);
+        }
+    };
+
     const { 
-            taskMap, 
             getSelecter, 
             getParentsArray, 
             hasChild, 
-            handleTask, 
-            // getCurrentMeasurementTask, 
-            // getCurrentTask,
+            handleStartTask,
+            handleStopTask,
+            handleCancelTask,
+            handleTask,
+            getTaskQueue,
+            getTaskCategories,
             getTaskStates,
 
-    } = useTask();
+    } = useTask({ onChangedTask });
 
-    const [selectedNode, setSelectedNode] = useState<TaskItem>();
-    // const currentTask = getCurrentTask();
-    // const currentMeasuredTask = getCurrentMeasurementTask();
+    const [selectedNode, setSelectedNode] = useState<TaskCategoryObject>();
+    const [messages, setMessages] = useState<[string, string, AlertColor][]>([]);
+
+    const queue = getTaskQueue();
+    const categories = getTaskCategories();
     const states = getTaskStates();
 
     const selecter = getSelecter(selectedNode);
     const breadCrumbs = getParentsArray(selectedNode);
-
-    const [startMessage, setStartMessage] = useState({
-        isOpen: false,
-        text: "",
-    });
  
     if (!selecter) return <Box className={"container"}><CircularProgress /></Box>
 
-    const onClickNode = (node: TaskItem) => {
+    const onClickNode = (node: TaskCategoryObject) => {
+
         if (hasChild(node)) setSelectedNode(node);
         else {
-            handleTask(node);
-            setStartMessage({
-                isOpen: true,
-                text: `タスク ${node.text}を開始しました`,
-            });
+            handleStartTask(node);
         }
     }
 
-    const onClickBreadCrumb = (node: TaskItem) => {
+    const onClickBreadCrumb = (node: TaskCategoryObject) => {
         setSelectedNode(node);
+    }
+
+    const onStopTask = (queId: string) => {
+
+        const queObject = queue.get(queId);
+
+        if (queObject) {
+            handleStopTask(queObject);
+        }
+    }
+
+    const onCancelTask = (queId: string) => {
+        handleCancelTask(queId);
+    }
+
+    const taskQueueProps = {
+        categories,
+        queue,
+        states,
+        onStopTask,
+        onCancelTask,
     }
 
     return <>
         <Box className={"container"}>
 
-            <Message {...startMessage} onClose={() => setStartMessage((_) => ({ isOpen: false, text: _.text }))}></Message>
+            { 
+                messages.map(m => <Message 
+                key={m[0]} 
+                text={m[1]}
+                alertColor={m[2]}
+                isOpen={messages.find(mm => mm[0] == m[0]) != undefined}
+                onClose={() => setMessages(_ => _.filter(um => um[0] != m[0]))} />) 
+            }
 
             <Stack gap={2}>
                 
@@ -80,16 +118,8 @@ export const TaskView = (props: Props) => {
                     <Button variant="contained" key={node.id} onClick={(e) => onClickNode(node)}>{ node.text }</Button> : 
                     <Button color="success" variant="contained" key={node.id} onClick={(e) => onClickNode(node)}>{ node.text }</Button>)) } */}
             </Stack>
-
-            {/* <Stack sx={{overflow: "auto"}}> */}
-                {/* <Measurement currentTask={currentTask} currentMeasuredTask={currentMeasuredTask} /> */}
-
-                {/* <Divider></Divider> */}
-                            
-                <TaskQue taskMap={taskMap} states={states}></TaskQue>
-
-            {/* </Stack> */}
-
+                        
+            <TaskQueue {...taskQueueProps}></TaskQueue>
 
         </Box>
 
